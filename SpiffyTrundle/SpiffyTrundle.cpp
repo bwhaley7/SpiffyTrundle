@@ -20,6 +20,7 @@ IMenuOption* ComboQ;
 IMenuOption* ComboW;
 IMenuOption* ComboE;
 IMenuOption* ComboR;
+IMenuOption* RHP;
 
 IMenuOption* hQ;
 IMenuOption* hW;
@@ -38,6 +39,7 @@ IMenuOption* laneQ;
 IMenuOption* laneW;
 IMenuOption* laneE;
 IMenuOption* clearMana;
+IMenuOption* WMinions;
 
 IMenuOption* DrawQ;
 IMenuOption* DrawW;
@@ -73,6 +75,7 @@ void Menu()
 	ComboW = ComboMenu->CheckBox("Use W", true);
 	ComboE = ComboMenu->CheckBox("Use E", true);
 	ComboR = ComboMenu->CheckBox("Use R", true);
+	RHP = ComboMenu->AddInteger("Enemy % HP for R", 0, 100, 50);
 
 	hQ = HarassMenu->CheckBox("Harass With Q", true);
 	hW = HarassMenu->CheckBox("Harass With W", true);
@@ -90,6 +93,7 @@ void Menu()
 	laneQ = ClearMenu->CheckBox("Use Q", true);
 	laneW = ClearMenu->CheckBox("Use W", true);
 	laneE = ClearMenu->CheckBox("Use E", true);
+	WMinions = ClearMenu->AddInteger("Minimum Minions for W", 1, 15, 8);
 	clearMana = ClearMenu->AddInteger("Mana Manager", 0, 100, 30);
 
 	DrawDisabled = DrawMenu->CheckBox("Disable Drawings", false);
@@ -150,9 +154,9 @@ void items()
 	if (Tiamat->IsOwned() && Tiamat->IsReady() && Tiamat->IsTargetInRange(t) && tiamat->Enabled())
 		Tiamat->CastOnTarget(t);
 
-	if (Ignite->IsReady() && Ignite->GetSpellSlot() != kSlotUnknown && SpiffyCommon::GetDistancePos(GEntityList->Player()->GetPosition(), t->GetPosition()) <= Ignite->GetSpellRange() &&
+	/*if (Ignite->IsReady() && Ignite->GetSpellSlot() != kSlotUnknown && SpiffyCommon::GetDistancePos(GEntityList->Player()->GetPosition(), t->GetPosition()) <= Ignite->GetSpellRange() &&
 		GDamage->GetSpellDamage(GEntityList->Player(), t, Ignite->GetSpellSlot()) >= t->GetHealth() && useIgnite->Enabled())
-		Ignite->CastOnUnit(t);
+		Ignite->CastOnUnit(t);*/
 }
 
 void Killsteal()
@@ -181,10 +185,16 @@ void Combo()
 	if (W->IsReady() && ComboW->Enabled() && GEntityList->Player()->IsValidTarget(t, W->Range()))
 		W->CastOnPosition(t->GetPosition());
 	if (E->IsReady() && ComboE->Enabled() && GEntityList->Player()->IsValidTarget(t, E->Range()))
+	{
 		E->CastOnTarget(t, kHitChanceHigh);
+		/*if (t->IsFacing(GEntityList->Player()))
+			E->CastOnPosition(t->Direction() * -1);
+		else
+			E->CastOnTarget(t, kHitChanceHigh);*/
+	}
 	if (Q->IsReady() && ComboQ->Enabled() && GEntityList->Player()->IsValidTarget(t, GEntityList->Player()->AttackRange()))
 		Q->CastOnUnit(t);
-	if (R->IsReady() && ComboR->Enabled() && GEntityList->Player()->IsValidTarget(t, R->Range()) && t->HealthPercent() < 50)
+	if (R->IsReady() && ComboR->Enabled() && GEntityList->Player()->IsValidTarget(t, R->Range()) && t->HealthPercent() <= RHP->GetInteger())
 		R->CastOnUnit(t);
 
 }
@@ -212,7 +222,7 @@ void Clear()
 		int minis = 0;
 		Vec3 pos = Vec3();
 		W->FindBestCastPosition(true, false, pos, minis);
-		if (minis >= 5)
+		if (minis >= WMinions->GetInteger())
 			W->CastOnPosition(pos);
 	}
 	if (Q->IsReady() && GEntityList->Player()->ManaPercent() >= clearmana)
