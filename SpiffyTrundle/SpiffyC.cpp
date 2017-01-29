@@ -43,7 +43,7 @@ float SpiffyCommon::GetDistancePos(Vec3 pos1, Vec3 pos2)
 
 auto SpiffyCommon::GetDistance(IUnit * player, IUnit * target)
 {
-	return;
+	return (player->GetPosition() - target->GetPosition()).Length2D();
 }
 
 bool SpiffyCommon::IsUnderTurret(IUnit * Source, bool CheckAllyTurrets, bool CheckEnemyTurrets)
